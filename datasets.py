@@ -114,18 +114,16 @@ class Cityscapes(Dataset):
         return img_tensor, target_tensor
 
 def main():
-    dataset = Cityscapes('/home/wan/dataset/cityscapes', resize=255, crop=(224,224))
+    dataset = Cityscapes('/home/wan/dataset/cityscapes', resize=256, crop=(224,224))
 
     dataloader = DataLoader(dataset)
 
     for i, batch in enumerate(dataloader):
         img, gt = batch
-        
-        for i in range(gt[0].size()[0]):
-            plt.imshow(gt[0][i])
-            plt.show()
 
-        break
+        img = TF.to_pil_image(img[0])
+
+        img.save('data/{}.png'.format(i))
 
 if __name__ == "__main__":
     main()

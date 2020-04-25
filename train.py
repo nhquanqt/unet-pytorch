@@ -17,6 +17,7 @@ parser.add_argument('--batch_size', type=int, default=1, help='batch size')
 parser.add_argument('--resize', type=int, default=256, help='resize image')
 parser.add_argument('--crop', type=tuple, default=(224,224), help='crop image')
 parser.add_argument('--n_epochs', type=int, default=200, help='number of epochs')
+parser.add_argument('--is_continue', type=bool, default=False, help='is continue training')
 opt = parser.parse_args()
 
 if torch.cuda.is_available():
@@ -25,8 +26,10 @@ else:
     device = torch.device('cpu')
 
 def main():
-    model = Unet(19).to(device)
-    # model = torch.load('unet.pth').to(device)
+    if opt.is_continue:
+        model = torch.load('unet.pth').to(device)
+    else:
+        model = Unet(19).to(device)
 
     dataset = Cityscapes(opt.root, resize=opt.resize, crop=opt.crop)
     dataloader = DataLoader(
@@ -55,9 +58,12 @@ def main():
             loss.backward()
             optimizer.step()
 
+            if i % 100 == 0:
+                print(loss)
+                
         print(loss)
 
-    torch.save(model, 'unet.pth')
+        torch.save(model, 'unet.pth')
 
 if __name__ == '__main__':
     main()

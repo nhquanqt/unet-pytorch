@@ -11,6 +11,8 @@ from datasets import Cityscapes
 
 import matplotlib.pyplot as plt
 
+import random
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=str, default='/home/wan/dataset/cityscapes', help='root directory of cityscapes')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size')
@@ -26,27 +28,26 @@ else:
 def main():
     model = torch.load('unet.pth').to(device)
 
-    dataset = Cityscapes(opt.root, resize=opt.resize, crop=opt.crop)
-    dataloader = DataLoader(
-        dataset,
-        batch_size=opt.batch_size,
-        shuffle=True,
-        num_workers=1
-    )
+    dataset = Cityscapes(opt.root, split='val', resize=opt.resize, crop=opt.crop)
 
-    for epoch in range(1):
-        for i, batch in enumerate(dataloader):
-            inputs, labels = batch
+    inputs, labels = random.choice(dataset)
 
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+    inputs = inputs.unsqueeze(0)
+    labels = labels.unsqueeze(0)
 
-            outputs = model(inputs)
-            outputs = outputs.detach()
+    inputs = inputs.to(device)
+    labels = labels.to(device)
 
-            for i in range(outputs[0].size()[0]):
-                plt.imshow(outputs[0][i])
-                plt.show()
+    outputs = model(inputs)
+    outputs = outputs.detach()
+
+    dst = torch.zeros((outputs[0].size()[1], outputs[0].size()[2]),dtype=torch.float32)
+
+    for i in range(outputs[0].size()[0]):
+        dst[outputs[0][i] > 0.5] = i
+    
+    plt.imshow(dst)
+    plt.show()
 
 
 if __name__ == "__main__":

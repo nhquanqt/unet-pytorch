@@ -36,7 +36,7 @@ class Unet(nn.Module):
     def __init__(self, num_classes, in_channels=3):
         super(Unet, self).__init__()
 
-        self.encoder = models.vgg16()
+        self.encoder = models.vgg16(pretrained=True)
 
         self.decoder_3 = Up(1024, 512)
         self.decoder_2 = Up(512, 256)
