@@ -25,10 +25,23 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
+def classes_to_rgb(tensor, dataset, thresh=0.5):
+    dst = torch.zeros((3, tensor.size()[1], tensor.size()[2]),dtype=torch.uint8)
+    for class_ in dataset.classes:
+        if not class_.ignore_in_eval:
+            idx = class_.train_id
+            dst[0][tensor[idx] > thresh] = class_.color[0]
+            dst[1][tensor[idx] > thresh] = class_.color[1]
+            dst[2][tensor[idx] > thresh] = class_.color[2]
+
+    return dst
+
+
 def main():
     model = torch.load('unet.pth').to(device)
 
-    dataset = Cityscapes(opt.root, split='val', resize=opt.resize, crop=opt.crop)
+    # dataset = Cityscapes(opt.root, split='val', resize=opt.resize, crop=opt.crop)
+    dataset = Cityscapes(opt.root, resize=opt.resize, crop=opt.crop)
 
     inputs, labels = random.choice(dataset)
 
@@ -41,12 +54,15 @@ def main():
     outputs = model(inputs)
     outputs = outputs.detach()
 
-    dst = torch.zeros((outputs[0].size()[1], outputs[0].size()[2]),dtype=torch.float32)
+    gt = classes_to_rgb(labels[0], dataset)
+    seg = classes_to_rgb(outputs[0], dataset)
 
-    for i in range(outputs[0].size()[0]):
-        dst[outputs[0][i] > 0.5] = i
-    
-    plt.imshow(dst)
+    fig, ax = plt.subplots(1,3)
+
+    ax[0].imshow(inputs[0].permute(1,2,0))
+    ax[1].imshow(gt.permute(1,2,0))
+    ax[2].imshow(seg.permute(1,2,0))
+
     plt.show()
 
 

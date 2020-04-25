@@ -42,6 +42,8 @@ def main():
     criterion = BCELoss().to(device)
     optimizer = Adam(model.parameters(), lr=0.001)
 
+    t_now = time.time()
+
     for epoch in range(opt.n_epochs):
         print('epoch {}'.format(epoch))
         for i, batch in enumerate(dataloader):
@@ -60,7 +62,9 @@ def main():
 
             if i % 100 == 0:
                 print(loss)
-                
+                print('time:', time.time() - t_now)
+                t_now = time.time()
+
         print(loss)
 
         torch.save(model, 'unet.pth')
